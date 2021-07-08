@@ -89,7 +89,7 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 		"build",
 	)
 
-	c.Path = b.config.ExecDirectory
+	c.Dir = b.config.ExecDirectory
 
 	err := c.Run()
 	if err != nil {
@@ -98,7 +98,7 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 		return nil, err
 	}
 
-	u.Step(terminal.StatusOK, "Static files build successfully")
+	u.Step(terminal.StatusOK, "Static files built successfully")
 
 	return &Binary{
 		Location: path.Join(b.config.ExecDirectory, b.config.OutputDir),
