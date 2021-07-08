@@ -10,7 +10,7 @@ This is a Build plugin for the Waypoint ecosystem. It's intended to be used alon
 git clone https://github.com/pilot-framework/yarn-waypoint-plugin.git
 ```
 
-2. (Optional) The compiled binaries should already be up to date, but if you want to ensure the binaries match the source you can run the Makefile to compile the plugin. The `Makefile` will build the plugin for all architectures.
+2. (Optional: build from source) The compiled binaries should already be up to date, but if you want to ensure the binaries match the source you can run the Makefile to compile the plugin. The `Makefile` will build the plugin for all architectures.
 
 ```shell
 cd yarn-waypoint-plugin
@@ -61,7 +61,6 @@ An example build stanza would look like the following:
 build {
    use "yarn" {
       directory = "client"
-      output = "client/build"
    }
 }
 ```
