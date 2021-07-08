@@ -44,7 +44,11 @@ user@machine:~/yarn-waypoint-plugin $ make install
 
 ## Building with Yarn
 
-This plugin ultimately acts as an alias to the `yarn build` command, and currently requires Yarn to be installed on the machine where the build is occurring. To utilize the plugin, you should specify the execution directory (i.e. the top-level directory for your front-end application), and the output directory (i.e. the build directory where your static files end up). An example build stanza would look like the following:
+This plugin ultimately acts as an alias to the `yarn build` command, and currently requires Yarn to be installed on the machine where the build is occurring.
+
+To utilize the plugin, you should specify the execution directory (i.e. the top-level directory for your front-end application), and the output directory (i.e. the build directory where your static files end up).
+
+An example build stanza would look like the following:
 
 ```
 # with a tree of
