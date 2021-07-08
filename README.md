@@ -1,23 +1,24 @@
 # Waypoint Plugin Template
 
-This folder contains an example plugin structure which can be used when building your own plugins.
+This is a Build plugin for the Waypoint ecosystem. It's intended to be used along with Yarn to build static files for frontend frameworks.
 
-## Steps
+## Install steps
 
-1. To scaffold a new plugin use the `./clone.sh` script passing the destination folder and the Go package
-for your new plugin as parameters
+1. Clone this repository
 
 ```shell
-./clone.sh myplugin ../destination_folder github.com/myorg/mypackage
+git clone https://github.com/pilot-framework/yarn-waypoint-plugin.git
 ```
 
-2. You can then run the Makefile to compile the new plugin, the `Makefile` will build the plugin for all architectures.
+2. (Optional) The compiled binaries should already be up to date, but if you want to ensure the binaries match the source you can run the Makefile to compile the plugin. The `Makefile` will build the plugin for all architectures.
 
 ```shell
-cd ../destination_folder
+cd yarn-waypoint-plugin
 
 make
 ```
+
+You should see the following output:
 
 ```shell
 Build Protos
@@ -35,41 +36,28 @@ GOOS=windows GOARCH=amd64 go build -o ./bin/windows_amd64/waypoint-plugin-mytest
 GOOS=windows GOARCH=386 go build -o ./bin/windows_386/waypoint-plugin-mytest.exe ./main.go 
 ```
 
-## Building with Docker
-
-To build plugins for release you can use the `build-docker` Makefile target, this will 
-build your plugin for all architectures and create zipped artifacts which can be uploaded
-to an artifact manager such as GitHub releases.
-
-The built artifacts will be output in the `./releases` folder.
+3. For the plugin to be able to work with your `waypoint.hcl` file, you must run the following command to copy the compiled binary into your Waypoint configuration directory.
 
 ```shell
-make build-docker
-
-rm -rf ./releases
-DOCKER_BUILDKIT=1 docker build --output releases --progress=plain .
-#1 [internal] load .dockerignore
-#1 transferring context: 2B done
-#1 DONE 0.0s
-
-#...
-
-#14 [export_stage 1/1] COPY --from=build /go/plugin/bin/*.zip .
-#14 DONE 0.1s
-
-#15 exporting to client
-#15 copying files 36.45MB 0.1s done
-#15 DONE 0.1s
+user@machine:~/yarn-waypoint-plugin $ make install
 ```
 
-## Building and releasing with GitHub Actions
+## Building with Yarn
 
-When cloning the template a default GitHub Action is created at the path `.github/workflows/build-plugin.yaml`. You can use this action to automatically build and release your plugin.
+This plugin ultimately acts as an alias to the `yarn build` command, and currently requires Yarn to be installed on the machine where the build is occurring. To utilize the plugin, you should specify the execution directory (i.e. the top-level directory for your front-end application), and the output directory (i.e. the build directory where your static files end up). An example build stanza would look like the following:
 
-The action has two main phases:
-1. **Build** - This phase builds the plugin binaries for all the supported architectures. It is triggered when pushing
-   to a branch or on pull requests.
-1. **Release** - This phase creates a new GitHub release containing the built plugin. It is triggered when pushing tags
-   which starting with `v`, for example `v0.1.0`.
+```
+# with a tree of
+.
+├── README.md
+├── client
+│   ├── build # where yarn outputs build files
+│   ├── ...
 
-You can enable this action by clicking on the `Actions` tab in your GitHub repository and enabling GitHub Actions.
+build {
+   use "yarn" {
+      directory = "client"
+      output = "client/build"
+   }
+}
+```
