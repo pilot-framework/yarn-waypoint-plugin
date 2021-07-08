@@ -2,8 +2,10 @@ package builder
 
 import (
 	"context"
-	"exec"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
@@ -83,8 +85,8 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	}
 
 	c := exec.Command(
-		"yarn"
-		"build"
+		"yarn",
+		"build",
 	)
 
 	c.Path = b.config.ExecDirectory
@@ -99,6 +101,6 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	u.Step(terminal.StatusOK, "Static files build successfully")
 
 	return &Binary{
-		Location: path.Join(b.config.Source, b.config.OutputDir),
+		Location: path.Join(b.config.ExecDirectory, b.config.OutputDir),
 	}, nil
 }
