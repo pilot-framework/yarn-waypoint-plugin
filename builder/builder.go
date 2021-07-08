@@ -2,13 +2,15 @@ package builder
 
 import (
 	"context"
+	"exec"
 	"fmt"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type BuildConfig struct {
-	Directory string `hcl:"directory,optional"`
+	ExecDirectory string `hcl:"directory,optional"`
+	OutputDir string `hcl:"output,optional"`
 }
 
 type Builder struct {
@@ -28,9 +30,11 @@ func (b *Builder) ConfigSet(config interface{}) error {
 		return fmt.Errorf("Expected *BuildConfig as parameter")
 	}
 
+	_, err := os.Stat(c.ExecDirectory)
+
 	// validate the config
-	if c.Directory == "" {
-		return fmt.Errorf("Directory must be set to a valid directory")
+	if err != nil {
+		return fmt.Errorf("Directory you specified Yarn to be executed in does not exist")
 	}
 
 	return nil
@@ -70,5 +74,31 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	defer u.Close()
 	u.Update("Building application")
 
-	return &Binary{}, nil
+	if b.config.ExecDirectory == "" {
+		b.config.ExecDirectory = "./"
+	}
+
+	if b.config.OutputDir == "" {
+		b.config.OutputDir = "build"
+	}
+
+	c := exec.Command(
+		"yarn"
+		"build"
+	)
+
+	c.Path = b.config.ExecDirectory
+
+	err := c.Run()
+	if err != nil {
+		u.Step(terminal.StatusError, "Build failed")
+
+		return nil, err
+	}
+
+	u.Step(terminal.StatusOK, "Static files build successfully")
+
+	return &Binary{
+		Location: path.Join(b.config.Source, b.config.OutputDir),
+	}, nil
 }
