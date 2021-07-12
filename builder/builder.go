@@ -74,7 +74,7 @@ func (b *Builder) BuildFunc() interface{} {
 func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	u := ui.Status()
 	defer u.Close()
-	u.Update("Building application")
+	u.Update("Building application...")
 
 	if b.config.ExecDirectory == "" {
 		b.config.ExecDirectory = "./"
