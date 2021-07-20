@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
@@ -13,6 +14,7 @@ import (
 type BuildConfig struct {
 	ExecDirectory string `hcl:"directory,optional"`
 	OutputDir string `hcl:"output,optional"`
+	BaseDir string `hcl:"base,optional"`
 }
 
 type Builder struct {
@@ -32,12 +34,25 @@ func (b *Builder) ConfigSet(config interface{}) error {
 		return fmt.Errorf("Expected *BuildConfig as parameter")
 	}
 
-	_, err := os.Stat(c.ExecDirectory)
-
-	// validate the config
+	tmpFiles, err := os.ReadDir("/tmp")
 	if err != nil {
-		return fmt.Errorf("Directory you specified Yarn to be executed in does not exist")
+		return fmt.Errorf("Error accessing tmp directory")
 	}
+
+	tmpDir := ""
+
+	for _, file := range tmpFiles {
+		if file.IsDir() && strings.Contains(file.Name(), "waypoint") {
+			tmpDir = file.Name()
+			break
+		}
+	}
+
+	if tmpDir == "" {
+		return fmt.Errorf("Could not find tmp directory for this project")
+	}
+
+	c.BaseDir = path.Join("/tmp", tmpDir)
 
 	return nil
 }
@@ -75,23 +90,15 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	u := ui.Status()
 	defer u.Close()
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		u.Step(terminal.StatusError, "Build failed")
-
-		return nil, err
-	}
-
 	if b.config.ExecDirectory == "" {
-		b.config.ExecDirectory = pwd
+		b.config.ExecDirectory = b.config.BaseDir
+	} else {
+		b.config.ExecDirectory = path.Join(b.config.BaseDir, strings.TrimLeft(b.config.ExecDirectory, "./"))
 	}
 
 	if b.config.OutputDir == "" {
 		b.config.OutputDir = "build"
 	}
-
-	u.Step("", fmt.Sprintf("PWD: %v", pwd))
-	u.Step("", "Specified directory:" + b.config.ExecDirectory)
 
 	u.Update("Installing dependencies required for build process...")
 
@@ -102,7 +109,7 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 
 	i.Dir = b.config.ExecDirectory
 
-	err = i.Run()
+	err := i.Run()
 	if err != nil {
 		u.Step(terminal.StatusError, "Build failed")
 
