@@ -74,7 +74,6 @@ func (b *Builder) BuildFunc() interface{} {
 func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	u := ui.Status()
 	defer u.Close()
-	u.Update("Building application...")
 
 	if b.config.ExecDirectory == "" {
 		b.config.ExecDirectory = "./"
@@ -84,6 +83,26 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 		b.config.OutputDir = "build"
 	}
 
+	u.Update("Installing dependencies required for build process...")
+
+	i := exec.Command(
+		"yarn",
+		"install",
+	)
+
+	i.Dir = b.config.ExecDirectory
+
+	err := i.Run()
+	if err != nil {
+		u.Step(terminal.StatusError, "Build failed")
+
+		return nil, err
+	}
+
+	u.Step("", "Successfully installed dependencies")
+
+	u.Update("Building optimized static files...")
+
 	c := exec.Command(
 		"yarn",
 		"build",
@@ -91,7 +110,7 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 
 	c.Dir = b.config.ExecDirectory
 
-	err := c.Run()
+	err = c.Run()
 	if err != nil {
 		u.Step(terminal.StatusError, "Build failed")
 
