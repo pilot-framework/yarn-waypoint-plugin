@@ -75,13 +75,23 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 	u := ui.Status()
 	defer u.Close()
 
+	pwd, err := os.Getwd()
+	if err != nil {
+		u.Step(terminal.StatusError, "Build failed")
+
+		return nil, err
+	}
+
 	if b.config.ExecDirectory == "" {
-		b.config.ExecDirectory = "./"
+		b.config.ExecDirectory = pwd
 	}
 
 	if b.config.OutputDir == "" {
 		b.config.OutputDir = "build"
 	}
+
+	u.Step("", fmt.Sprintf("PWD: %v", pwd))
+	u.Step("", "Specified directory:" + b.config.ExecDirectory)
 
 	u.Update("Installing dependencies required for build process...")
 
@@ -92,7 +102,7 @@ func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
 
 	i.Dir = b.config.ExecDirectory
 
-	err := i.Run()
+	err = i.Run()
 	if err != nil {
 		u.Step(terminal.StatusError, "Build failed")
 
